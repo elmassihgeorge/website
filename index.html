@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Explorations - Interactive Visualizations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0a0f;
+            --secondary-bg: #1a1a2e;
+            --accent-color: #00ff88;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: #b4b4b8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, var(--accent-purple) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, var(--accent-cyan) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, var(--accent-color) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(1deg); }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--accent-color), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--accent-color);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--text-primary), var(--accent-color), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)); }
+            to { filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.6)); }
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, var(--accent-color), var(--accent-cyan));
+            color: var(--primary-bg);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* Projects Section */
+        .projects {
+            padding: 5rem 0;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--text-primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .module-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+
+        .module-card:hover::before {
+            height: 2px;
+            box-shadow: 0 0 20px var(--accent-color);
+        }
+
+        .module-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .module-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .canvas-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 200px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-placeholder {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .view-code-btn {
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .view-code-btn:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            transform: scale(1.05);
+        }
+
+        /* About Section */
+        .about {
+            padding: 5rem 0;
+            background: var(--secondary-bg);
+            margin: 3rem 0;
+            border-radius: 50px;
+        }
+
+        .about-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .about h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px solid var(--glass-border);
+            margin-top: 3rem;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .module-card {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">MathViz</div>
+                <nav>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Mathematics Through Code</h1>
+                <p>Interactive visualizations exploring the infinite beauty of mathematical concepts through cutting-edge programming</p>
+                <a href="#projects" class="cta-button">Explore Visualizations</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="projects" id="projects">
+        <div class="container">
+            <h2 class="section-title">Interactive Projects</h2>
+            <div class="modules-grid">
+                <div class="module-card fade-in">
+                    <h3>Mandelbrot Set Explorer</h3>
+                    <p>Dive deep into the infinite complexity of the famous fractal with real-time zoom capabilities, dynamic coloring algorithms, and interactive exploration tools.</p>
+                    <div class="canvas-container">
+                        <div id="mandelbrot-container">
+                            <div class="canvas-placeholder">// Fractal visualization loading...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('mandelbrot')">View Source Code</button>
+                </div>
+
+                <div class="module-card fade-in">
+                    <h3>Golden Spiral</h3>
+                    <p>Experience the mathematical elegance of the golden ratio through animated spiral generation, Fibonacci sequence visualization, and geometric harmony.</p>
+                    <div class="canvas-container">
+                        <div id="spiral-container">
+                            <div class="canvas-placeholder">// Golden ratio animation...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('spiral')">View Source Code</button>
+                </div>
+
+                <div class="module-card fade-in">
+                    <h3>3D Function Plotter</h3>
+                    <p>Visualize complex mathematical functions in three dimensions with WebGL acceleration, interactive camera controls, and customizable parameter inputs.</p>
+                    <div class="canvas-container">
+                        <div id="threejs-container">
+                            <div class="canvas-placeholder">// 3D mathematics rendering...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('3d-plot')">View Source Code</button>
+                </div>
+
+                <div class="module-card fade-in">
+                    <h3>Wave Interference</h3>
+                    <p>Explore wave physics through interactive simulations showing constructive and destructive interference patterns in real-time.</p>
+                    <div class="canvas-container">
+                        <div id="wave-container">
+                            <div class="canvas-placeholder">// Wave physics simulation...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('waves')">View Source Code</button>
+                </div>
+
+                <div class="module-card fade-in">
+                    <h3>Chaos Theory</h3>
+                    <p>Visualize the beauty of chaos through the Lorenz attractor, butterfly effect demonstrations, and strange attractor explorations.</p>
+                    <div class="canvas-container">
+                        <div id="chaos-container">
+                            <div class="canvas-placeholder">// Chaos theory visualization...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('chaos')">View Source Code</button>
+                </div>
+
+                <div class="module-card fade-in">
+                    <h3>Prime Number Patterns</h3>
+                    <p>Discover hidden patterns in prime number distribution through various visualization techniques and mathematical analyses.</p>
+                    <div class="canvas-container">
+                        <div id="primes-container">
+                            <div class="canvas-placeholder">// Prime number analysis...</div>
+                        </div>
+                    </div>
+                    <button class="view-code-btn" onclick="showCodeModal('primes')">View Source Code</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content fade-in">
+                <h2>About This Project</h2>
+                <p>This collection represents the intersection of mathematical beauty and computational power. Each visualization is carefully crafted to reveal the hidden patterns and structures that govern our mathematical universe.</p>
+                <p>Built with modern web technologies including p5.js, Three.js, and WebGL, these interactive experiences make complex mathematical concepts accessible and visually stunning.</p>
+                <p>Mathematics is not just numbers and equations—it's the language of patterns, the foundation of beauty, and the key to understanding the cosmos.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <p>&copy; 2025 MathViz. Exploring the infinite beauty of mathematics through interactive programming.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(10, 10, 15, 0.95)';
+            } else {
+                header.style.background = 'rgba(10, 10, 15, 0.8)';
+            }
+        });
+
+        // Code modal function (placeholder)
+        function showCodeModal(project) {
+            // Create a simple modal for now
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--secondary-bg);
+                padding: 2rem;
+                border-radius: 20px;
+                border: 1px solid var(--accent-color);
+                max-width: 500px;
+                text-align: center;
+            `;
+            
+            content.innerHTML = `
+                <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Source Code: ${project}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Interactive code viewing and GitHub integration coming soon!</p>
+                <button onclick="this.closest('div').remove()" style="background: var(--accent-color); color: var(--primary-bg); border: none; padding: 0.75rem 1.5rem; border-radius: 25px; cursor: pointer; font-weight: 600;">Close</button>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Initialize canvas placeholders with animated text
+        function animateCanvasPlaceholders() {
+            const placeholders = document.querySelectorAll('.canvas-placeholder');
+            placeholders.forEach((placeholder, index) => {
+                let dots = '';
+                setInterval(() => {
+                    dots = dots.length >= 3 ? '' : dots + '.';
+                    const originalText = placeholder.textContent.split('...')[0];
+                    placeholder.textContent = originalText + dots;
+                }, 500 + index * 100);
+            });
+        }
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            animateCanvasPlaceholders();
+        });
+    </script>
+
+    <!-- Your existing JavaScript files -->
+    <script src="js/mandelbrot.js"></script>
+    <script src="js/spiral.js"></script>
+    <script src="js/threejs-plot.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
