@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mandelbrot Set Explorer - MathViz</title>
+    <title>Mathematical Explorations - Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -33,653 +34,832 @@
             background: var(--primary-bg);
             color: var(--text-primary);
             line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced background with subtle particles */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         /* Header */
-        .header {
-            background: rgba(10, 14, 26, 0.95);
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(10, 14, 26, 0.9);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .logo {
             font-size: 1.5rem;
-            font-weight: 700;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo::before {
+            content: '∫';
+            font-size: 2rem;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            text-decoration: none;
         }
 
-        .nav-links {
+        nav ul {
             display: flex;
-            gap: 2rem;
+            list-style: none;
+            gap: 2.5rem;
         }
 
-        .nav-links a {
+        nav a {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
         }
 
-        .nav-links a:hover {
+        nav a:hover {
             color: var(--accent-primary);
         }
 
-        /* Main content */
-        .container {
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(ellipse at center, rgba(0, 212, 170, 0.05) 0%, transparent 70%);
+        }
+
+        .hero-content {
+            max-width: 900px;
+            z-index: 2;
+            animation: heroFadeIn 1.5s ease-out;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 50%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+
+        .hero .credentials {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-primary, .cta-secondary {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--primary-bg);
+            box-shadow: 0 10px 25px rgba(0, 212, 170, 0.3);
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 212, 170, 0.4);
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+        }
+
+        .cta-secondary:hover {
+            background: var(--accent-primary);
+            color: var(--primary-bg);
+            transform: translateY(-2px);
+        }
+
+        /* Projects section */
+        .projects {
+            padding: 6rem 2rem;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
         }
 
-        .module-header {
+        .section-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
         }
 
-        .module-title {
+        .section-title {
             font-size: 3rem;
-            font-weight: 800;
+            font-weight: 700;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .module-subtitle {
-            font-size: 1.2rem;
+        .section-subtitle {
+            font-size: 1.1rem;
             color: var(--text-secondary);
             max-width: 600px;
             margin: 0 auto;
         }
 
-        .module-content {
+        .modules-grid {
             display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 3rem;
-            margin-bottom: 4rem;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
         }
 
-        .visualization-panel {
+        .module-card {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            overflow: hidden;
         }
 
-        .visualization-container {
-            background: var(--primary-bg);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            position: relative;
-            min-height: 500px;
-            margin-bottom: 2rem;
-        }
-
-        .controls-panel {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .control-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .control-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .control-label {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .control-input {
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 0.75rem;
-            color: var(--text-primary);
-            font-family: inherit;
-            transition: border-color 0.3s ease;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
         }
 
-        .control-input:focus {
-            outline: none;
+        .module-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
             border-color: var(--accent-primary);
         }
 
-        .control-button {
-            background: var(--accent-primary);
-            color: var(--primary-bg);
-            border: none;
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .module-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .module-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .canvas-container {
+            background: var(--primary-bg);
+            border-radius: 12px;
+            height: 300px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #mandelbrot-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        #mandelbrot-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        
+        #mandelbrot-canvas:active {
+            cursor: grabbing;
+        }
+
+        .performance-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--accent-primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .module-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            cursor: pointer;
+            text-decoration: none;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .control-button:hover {
-            background: #00b894;
-            transform: translateY(-1px);
+        .btn-primary {
+            background: var(--accent-primary);
+            color: var(--primary-bg);
         }
 
-        .control-button.secondary {
+        .btn-secondary {
             background: transparent;
             color: var(--accent-secondary);
             border: 1px solid var(--accent-secondary);
         }
 
-        .control-button.secondary:hover {
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:hover {
+            background: #00b894;
+            box-shadow: 0 5px 15px rgba(0, 212, 170, 0.3);
+        }
+
+        .btn-secondary:hover {
             background: var(--accent-secondary);
             color: var(--text-primary);
         }
 
-        .info-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .info-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2rem;
-        }
-
-        .info-card h3 {
-            color: var(--accent-primary);
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-        }
-
-        .info-card p {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.6;
+        /* Stats section */
+        .stats {
+            background: var(--secondary-bg);
+            padding: 4rem 2rem;
+            margin: 4rem 0;
+            border-radius: 24px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .stat-item {
             text-align: center;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+            padding: 1.5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
         }
 
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            font-family: 'JetBrains Mono', monospace;
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
-        }
-
-        .concept-list {
-            list-style: none;
-        }
-
-        .concept-list li {
-            padding: 0.5rem 0;
             color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .concept-list li:last-child {
-            border-bottom: none;
-        }
-
-        .concept-list li::before {
-            content: '→';
-            color: var(--accent-primary);
-            margin-right: 0.5rem;
-        }
-
-        /* Documentation section */
-        .documentation {
-            background: var(--secondary-bg);
-            border-radius: 20px;
-            padding: 3rem;
-            margin-bottom: 3rem;
-        }
-
-        .doc-section {
-            margin-bottom: 2rem;
-        }
-
-        .doc-section h3 {
-            color: var(--accent-primary);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .code-block {
-            background: var(--primary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            overflow-x: auto;
-        }
-
-        .code-block code {
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
-            line-height: 1.4;
+            font-weight: 500;
         }
 
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .module-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
+        /* About section */
+        .about {
+            padding: 6rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-            .container {
+        .about-content {
+            text-align: center;
+        }
+
+        .about h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes heroFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .webgl-error {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        /* Loading state for canvas */
+        .canvas-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: var(--primary-bg);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+        }
+        
+        .canvas-loading::before {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
                 padding: 1rem;
             }
 
-            .module-title {
-                font-size: 2rem;
+            nav ul {
+                gap: 1.5rem;
+                font-size: 0.9rem;
             }
 
-            .stats-grid {
+            .modules-grid {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .canvas-container {
+                height: 250px;
             }
         }
     </style>
 </head>
 <body>
-    <header class="header">
+    <canvas class="bg-canvas"></canvas>
+    
+    <header>
         <div class="header-content">
-            <a href="../index.html" class="logo">MathViz</a>
-            <nav class="nav-links">
-                <a href="../index.html">Home</a>
-                <a href="../index.html#modules">All Modules</a>
-                <a href="../index.html#about">About</a>
-                <a href="https://github.com/yourusername/mathviz" target="_blank">GitHub</a>
+            <div class="logo">Mathematical Explorations</div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
             </nav>
         </div>
     </header>
 
-    <main class="container">
-        <div class="module-header">
-            <h1 class="module-title">Mandelbrot Set Explorer</h1>
-            <p class="module-subtitle">
-                Interactive exploration of one of mathematics' most famous fractals through complex number iteration and escape-time algorithms
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Computational Mathematics Portfolio</h1>
+            <p class="subtitle">
+                Interactive visualizations exploring the beauty of mathematics through code
+            </p>
+            <p class="credentials">
+                BS Computer Science & Mathematics • Northeastern University • Preparing for MS Scientific Computing at NYU
+            </p>
+            <div class="cta-buttons">
+                <a href="#projects" class="cta-primary">Explore Projects</a>
+                <a href="#about" class="cta-secondary">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">WebGL</div>
+                <div class="stat-label">GPU Acceleration</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">200+</div>
+                <div class="stat-label">FPS Performance</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Zoom Depth</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">2026</div>
+                <div class="stat-label">NYU Bound</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="projects" id="projects">
+        <div class="section-header">
+            <h2 class="section-title">Featured Projects</h2>
+            <p class="section-subtitle">
+                Mathematical visualizations demonstrating computational techniques and numerical methods
             </p>
         </div>
-
-        <div class="module-content">
-            <div class="visualization-panel">
-                <div class="visualization-container" id="mandelbrot-main">
-                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
-                        Loading Mandelbrot Set Visualization...
-                    </div>
-                </div>
-
-                <div class="controls-panel">
-                    <div class="control-group">
-                        <label class="control-label">Maximum Iterations</label>
-                        <input type="range" class="control-input" id="iterations-slider" min="50" max="500" step="10" value="100">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            <span>50</span>
-                            <span id="iterations-value">100</span>
-                            <span>500</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label class="control-label">Color Palette</label>
-                        <select class="control-input" id="palette-select">
-                            <option value="0">Classic Blue-Purple</option>
-                            <option value="1">Fire</option>
-                            <option value="2">Ocean</option>
-                            <option value="3">Rainbow</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <button class="control-button" onclick="resetView()">Reset View</button>
-                        <button class="control-button secondary" onclick="toggleQuality()">Toggle Quality</button>
-                        <button class="control-button secondary" onclick="saveImage()">Save Image</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-panel">
-                <div class="info-card">
-                    <h3>Real-time Statistics</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value" id="current-zoom">1.0x</div>
-                            <div class="stat-label">Zoom Level</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="current-fps">60</div>
-                            <div class="stat-label">FPS</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="current-iterations">100</div>
-                            <div class="stat-label">Max Iterations</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="render-time">16ms</div>
-                            <div class="stat-label">Render Time</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <h3>Mathematical Concepts</h3>
-                    <p>The Mandelbrot set demonstrates several fundamental concepts in mathematics and computer science:</p>
-                    <ul class="concept-list">
-                        <li>Complex Number Theory</li>
-                        <li>Iterative Functions</li>
-                        <li>Escape-Time Algorithms</li>
-                        <li>Computational Complexity</li>
-                        <li>Fractal Geometry</li>
-                        <li>Infinite Detail</li>
-                    </ul>
-                </div>
-
-                <div class="info-card">
-                    <h3>Controls & Navigation</h3>
-                    <p>Explore the fractal using these interactive controls:</p>
-                    <ul class="concept-list">
-                        <li>Click & drag to pan around</li>
-                        <li>Mouse wheel to zoom in/out</li>
-                        <li>C key to cycle color palettes</li>
-                        <li>Q key to toggle render quality</li>
-                        <li>R key to reset to initial view</li>
-                        <li>Use sliders for precise control</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="documentation">
-            <div class="doc-section">
-                <h3>Mathematical Foundation</h3>
-                <p>
-                    The Mandelbrot set is defined as the set of complex numbers c for which the iterative formula 
-                    z<sub>n+1</sub> = z<sub>n</sub><sup>2</sup> + c does not diverge when starting from z<sub>0</sub> = 0.
-                </p>
-                <div class="code-block">
-                    <code>
-function calculateMandelbrot(x, y) {
-    let a = map(x, 0, width, -2.5/zoom + offsetX, 1.5/zoom + offsetX);
-    let b = map(y, 0, height, -1.5/zoom + offsetY, 1.5/zoom + offsetY);
-    
-    let ca = a, cb = b, n = 0, za = a, zb = b;
-    
-    while (n < maxIterations) {
-        let aa = za * za - zb * zb;
-        let bb = 2 * za * zb;
-        za = aa + ca;
-        zb = bb + cb;
         
-        if (za * za + zb * zb > 4) {
-            // Smooth coloring using continuous iteration count
-            return n + 1 - log(log(sqrt(za*za + zb*zb)))/log(2);
-        }
-        n++;
-    }
-    
-    return maxIterations;
-}
-                    </code>
+        <div class="modules-grid">
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">∀</div>
+                    <h3>Mandelbrot Set Explorer</h3>
+                </div>
+                <p>GPU-accelerated fractal exploration with WebGL shaders. Features smooth coloring, deep zoom capabilities, and real-time interaction at 200+ FPS.</p>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <strong>Controls:</strong> Drag to pan • Scroll to zoom • R: reset • C: colors • Q: quality
+                </div>
+                <div class="canvas-container">
+                    <div id="mandelbrot-container">
+                        <canvas id="mandelbrot-canvas"></canvas>
+                        <div class="canvas-loading" id="mandelbrot-loading">Initializing WebGL...</div>
+                    </div>
+                    <div class="performance-badge" id="mandelbrot-fps">0 FPS</div>
+                </div>
+                <div class="module-actions">
+                    <button class="btn btn-primary" onclick="resetMandelbrot()">
+                        <span>Reset View</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="toggleColorScheme()">
+                        <span>Change Colors</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="exploreInterestingLocation()">
+                        <span>Auto Explore</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="doc-section">
-                <h3>Escape-Time Algorithm</h3>
-                <p>
-                    The visualization uses an escape-time algorithm to determine if each point belongs to the set. 
-                    Points that don't escape after a maximum number of iterations are considered part of the set and colored black.
-                </p>
-                <p>
-                    The algorithm's efficiency is crucial for real-time interaction. Several optimizations are employed:
-                </p>
-                <ul style="color: var(--text-secondary); margin-left: 2rem;">
-                    <li>Adaptive quality rendering during user interaction</li>
-                    <li>Smooth iteration counting for better color gradients</li>
-                    <li>Optimized pixel manipulation for performance</li>
-                    <li>Dynamic iteration count based on zoom level</li>
-                </ul>
-            </div>
-
-            <div class="doc-section">
-                <h3>Color Mapping</h3>
-                <p>
-                    Different color palettes highlight various aspects of the fractal's structure. The coloring is based 
-                    on the number of iterations required for a point to escape the bounded region.
-                </p>
-                <div class="code-block">
-                    <code>
-function getColor(iterations) {
-    if (iterations >= maxIterations) return color(0, 0, 0);
-    
-    let palette = palettes[colorPalette];
-    let hue = map(iterations % 80, 0, 80, palette.hueRange[0], palette.hueRange[1]);
-    let sat = palette.saturation;
-    let bright = map(iterations, 0, maxIterations, 20, 100);
-    
-    return color(hue, sat, bright);
-}
-                    </code>
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon" style="background: linear-gradient(135deg, #00d4aa, #06b6d4);">φ</div>
+                    <h3>Golden Spiral & Sequences</h3>
+                </div>
+                <p>Animated visualization of the golden ratio, Fibonacci sequences, and mathematical spirals. Demonstrates the intersection of number theory and geometric beauty.</p>
+                <div class="canvas-container">
+                    <div id="spiral-container"></div>
+                    <div class="performance-badge">60 FPS</div>
+                </div>
+                <div class="module-actions">
+                    <button class="btn btn-primary">View Details</button>
+                    <button class="btn btn-secondary">Reset Animation</button>
                 </div>
             </div>
 
-            <div class="doc-section">
-                <h3>Performance Optimization</h3>
-                <p>
-                    Real-time fractal rendering requires careful performance optimization. This implementation includes:
-                </p>
-                <ul style="color: var(--text-secondary); margin-left: 2rem;">
-                    <li><strong>Adaptive Quality:</strong> Lower resolution during interaction, full quality when stationary</li>
-                    <li><strong>Efficient Pixel Access:</strong> Direct pixel array manipulation for maximum performance</li>
-                    <li><strong>Smart Iteration Limits:</strong> Dynamic adjustment based on zoom level</li>
-                    <li><strong>Optimized Math:</strong> Minimal function calls in tight loops</li>
-                    <li><strong>Frame Rate Monitoring:</strong> Real-time performance feedback</li>
-                </ul>
-            </div>
-
-            <div class="doc-section">
-                <h3>Scientific Computing Applications</h3>
-                <p>
-                    This visualization demonstrates several concepts relevant to scientific computing:
-                </p>
-                <ul style="color: var(--text-secondary); margin-left: 2rem;">
-                    <li><strong>Numerical Stability:</strong> Understanding when iterative processes converge or diverge</li>
-                    <li><strong>Algorithm Efficiency:</strong> Optimizing computational intensive operations</li>
-                    <li><strong>Visualization Techniques:</strong> Effective representation of mathematical data</li>
-                    <li><strong>Interactive Computing:</strong> Real-time parameter adjustment and feedback</li>
-                    <li><strong>Complex Analysis:</strong> Working with complex numbers and functions</li>
-                </ul>
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">∇</div>
+                    <h3>3D Function Visualizer</h3>
+                </div>
+                <p>Real-time 3D plotting with Three.js. Interactive camera controls, multiple mathematical functions, and smooth surface rendering.</p>
+                <div class="canvas-container">
+                    <div id="threejs-container"></div>
+                    <div class="performance-badge">60 FPS</div>
+                </div>
+                <div class="module-actions">
+                    <button class="btn btn-primary">View Details</button>
+                    <button class="btn btn-secondary">Switch Function</button>
+                </div>
             </div>
         </div>
-    </main>
+    </section>
 
-    <!-- Include the Mandelbrot module -->
-    <script src="../js/mandelbrot.js"></script>
+    <section class="about" id="about">
+        <div class="about-content">
+            <h2>About This Portfolio</h2>
+            <p>
+                Hi! I'm a computer science and mathematics graduate from Northeastern University, passionate about computational mathematics and scientific computing. This portfolio showcases my exploration of mathematical concepts through interactive visualizations.
+            </p>
+            <p>
+                Each project demonstrates key concepts in numerical analysis, algorithm design, and real-time computation. I'm currently preparing for my Master's in Scientific Computing at NYU (Fall 2026), where I plan to focus on high-performance computing and numerical methods.
+            </p>
+            <p>
+                All visualizations are built from scratch using modern web technologies, with a focus on performance optimization and mathematical accuracy.
+            </p>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="footer-content">
+            <p>&copy; 2025 Mathematical Explorations • BS CS & Math, Northeastern • Future MS Scientific Computing, NYU 2026</p>
+        </div>
+    </footer>
+
+    <!-- Load the modular Mandelbrot WebGL implementation -->
+    <!-- Place mandelbrot-webgl.js in your js/ folder -->
+    <script src="js/mandelbrot-webgl.js"></script>
     
     <script>
-        // Module instance
-        let mandelbrotModule = null;
+        // Initialize Mandelbrot explorer
+        let mandelbrot;
         
-        // Initialize the module
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('mandelbrot-canvas');
+            const loading = document.getElementById('mandelbrot-loading');
+            
+            if (canvas) {
                 try {
-                    mandelbrotModule = window.createMandelbrotVisualizer('mandelbrot-main');
-                    setupControls();
-                    startStatsUpdate();
-                    console.log('Mandelbrot module initialized successfully!');
-                } catch (error) {
-                    console.error('Error initializing module:', error);
-                    document.getElementById('mandelbrot-main').innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--error);">
-                            Error loading visualization
-                        </div>
-                    `;
-                }
-            }, 500);
-        });
-
-        // Setup control event listeners
-        function setupControls() {
-            const zoomSlider = document.getElementById('zoom-slider');
-            const iterationsSlider = document.getElementById('iterations-slider');
-            const paletteSelect = document.getElementById('palette-select');
-
-            zoomSlider.addEventListener('input', (e) => {
-                if (mandelbrotModule) {
-                    mandelbrotModule.zoom = parseFloat(e.target.value);
-                    mandelbrotModule.drawMandelbrot();
-                }
-                document.getElementById('zoom-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
-            });
-
-            iterationsSlider.addEventListener('input', (e) => {
-                if (mandelbrotModule) {
-                    mandelbrotModule.maxIterations = parseInt(e.target.value);
-                    mandelbrotModule.drawMandelbrot();
-                }
-                document.getElementById('iterations-value').textContent = e.target.value;
-            });
-
-            paletteSelect.addEventListener('change', (e) => {
-                if (mandelbrotModule) {
-                    mandelbrotModule.colorPalette = parseInt(e.target.value);
-                    mandelbrotModule.drawMandelbrot();
-                }
-            });
-        }
-
-        // Control functions
-        function resetView() {
-            if (mandelbrotModule) {
-                mandelbrotModule.reset();
-                // Reset sliders
-                document.getElementById('zoom-slider').value = 1;
-                document.getElementById('zoom-value').textContent = '1.0x';
-                document.getElementById('iterations-slider').value = 100;
-                document.getElementById('iterations-value').textContent = '100';
-            }
-        }
-
-        function toggleQuality() {
-            if (mandelbrotModule) {
-                mandelbrotModule.toggleQuality();
-            }
-        }
-
-        function saveImage() {
-            if (mandelbrotModule && mandelbrotModule.p5Instance) {
-                mandelbrotModule.p5Instance.save('mandelbrot-set.png');
-            }
-        }
-
-        // Update statistics display
-        function startStatsUpdate() {
-            setInterval(() => {
-                if (mandelbrotModule) {
-                    const info = mandelbrotModule.getInfo();
-                    document.getElementById('current-zoom').textContent = info.zoom.toFixed(2) + 'x';
-                    document.getElementById('current-fps').textContent = info.fps;
-                    document.getElementById('current-iterations').textContent = info.iterations;
+                    mandelbrot = new MandelbrotWebGL({
+                        canvas: canvas,
+                        centerX: -0.5,
+                        centerY: 0.0,
+                        zoom: 0.7,
+                        onFPSUpdate: (fps) => {
+                            document.getElementById('mandelbrot-fps').textContent = fps + ' FPS';
+                        }
+                    });
                     
-                    // Calculate approximate render time
-                    const renderTime = Math.round(1000 / Math.max(info.fps, 1));
-                    document.getElementById('render-time').textContent = renderTime + 'ms';
-                }
-            }, 1000);
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (event) => {
-            if (mandelbrotModule) {
-                switch(event.key.toLowerCase()) {
-                    case 'r':
-                        if (!event.ctrlKey && !event.metaKey) {
-                            event.preventDefault();
-                            resetView();
-                        }
-                        break;
-                    case 'c':
-                        event.preventDefault();
-                        mandelbrotModule.changeColorPalette();
-                        // Update select
-                        const select = document.getElementById('palette-select');
-                        select.value = mandelbrotModule.colorPalette;
-                        break;
-                    case 'q':
-                        event.preventDefault();
-                        toggleQuality();
-                        break;
-                    case 's':
-                        if (event.ctrlKey || event.metaKey) {
-                            event.preventDefault();
-                            saveImage();
-                        }
-                        break;
+                    // Hide loading message
+                    if (loading) {
+                        loading.style.display = 'none';
+                    }
+                    
+                    // Make instance globally accessible for debugging
+                    window.mandelbrot = mandelbrot;
+                    
+                } catch (error) {
+                    console.error('Failed to initialize Mandelbrot:', error);
+                    if (loading) {
+                        loading.innerHTML = 'WebGL initialization failed. Please ensure you have a modern browser with WebGL support.';
+                        loading.style.color = '#ff6b6b';
+                    }
                 }
             }
+            
+            // Initialize background animation
+            initBackgroundCanvas();
+        });
+        
+        // Control functions
+        function resetMandelbrot() {
+            if (mandelbrot) mandelbrot.reset();
+        }
+        
+        function toggleColorScheme() {
+            if (mandelbrot) mandelbrot.nextColorScheme();
+        }
+        
+        // Example: Auto-explore interesting locations
+        function exploreInterestingLocation() {
+            const locations = [
+                { x: -0.7269, y: 0.1889, zoom: 1000 },
+                { x: -0.8, y: 0.156, zoom: 500 },
+                { x: -0.74529, y: 0.11307, zoom: 2000 },
+                { x: -1.25066, y: 0.02012, zoom: 5000 },
+                { x: -0.7533, y: 0.1138, zoom: 10000 }
+            ];
+            
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            mandelbrot.zoomTo(location.x, location.y, location.zoom, 2000);
+        }
+        
+        // Minimal background animation
+        function initBackgroundCanvas() {
+            const canvas = document.querySelector('.bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            function createParticles() {
+                particles = [];
+                const numParticles = 50;
+                
+                for (let i = 0; i < numParticles; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 2 + 1,
+                        opacity: Math.random() * 0.5 + 0.1
+                    });
+                }
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    
+                    if (particle.x < 0) particle.x = canvas.width;
+                    if (particle.x > canvas.width) particle.x = 0;
+                    if (particle.y < 0) particle.y = canvas.height;
+                    if (particle.y > canvas.height) particle.y = 0;
+                    
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(0, 212, 170, ${particle.opacity})`;
+                    ctx.fill();
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                createParticles();
+            });
+            
+            resizeCanvas();
+            createParticles();
+            animate();
+        }
+        
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerHeight = document.querySelector('header').offsetHeight;
+                    const targetPosition = target.offsetTop - headerHeight - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            const scrolled = window.pageYOffset;
+            const opacity = Math.min(0.95, 0.8 + (scrolled / 200) * 0.15);
+            header.style.background = `rgba(10, 14, 26, ${opacity})`;
         });
     </script>
 </body>
-</html>Zoom Level</label>
-                        <input type="range" class="control-input" id="zoom-slider" min="0.1" max="100" step="0.1" value="1">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            <span>0.1x</span>
-                            <span id="zoom-value">1.0x</span>
-                            <span>100x</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label class="control-label">
+</html>
