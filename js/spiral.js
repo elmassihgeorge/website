@@ -1,141 +1,211 @@
-// Enhanced Golden Spiral and Mathematical Spirals Visualization
-let spiralSketch = function(p) {
-    let angle = 0;
-    let points = [];
-    let spiralType = 0; // 0: Golden, 1: Fibonacci, 2: Archimedean, 3: Logarithmic
-    let colorMode = 0; // 0: Rainbow trail, 1: Golden gradient, 2: Fire, 3: Ocean
-    let animationSpeed = 0.05;
-    let maxPoints = 200;
-    let showGrid = false;
-    let showInfo = true;
-    let isPaused = false;
-    let particleTrail = [];
-    let time = 0;
-    
-    // Spiral parameters
-    let phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
-    let spiralScale = 3;
-    let rotationOffset = 0;
-    
-    p.setup = function() {
-        let canvas = p.createCanvas(300, 250);
-        canvas.parent('spiral-container');
-        p.colorMode(p.HSB, 360, 100, 100);
+// spiral.js - Golden Spiral and Mathematical Sequences Module
+class SpiralVisualizer {
+    constructor(containerId) {
+        this.containerId = containerId;
+        this.angle = 0;
+        this.points = [];
+        this.spiralType = 0;
+        this.colorMode = 0;
+        this.animationSpeed = 0.05;
+        this.maxPoints = 200;
+        this.showGrid = false;
+        this.showInfo = true;
+        this.isPaused = false;
+        this.particleTrail = [];
+        this.time = 0;
+        this.frameCount = 0;
+        this.lastFPSUpdate = 0;
+        this.fps = 60;
+        this.p5Instance = null;
         
-        // Initialize with some starting points for smoother animation
-        initializeSpiral();
+        // Mathematical constants
+        this.phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
+        this.spiralScale = 3;
+        this.rotationOffset = 0;
         
-        // Add controls info
-        addControlsInfo();
-    };
-    
-    p.draw = function() {
-        if (!isPaused) {
-            time += 0.02;
-            angle += animationSpeed;
-        }
-        
-        // Dynamic background with subtle gradient
-        drawBackground();
-        
-        p.translate(p.width/2, p.height/2);
-        p.rotate(rotationOffset);
-        
-        if (showGrid) {
-            drawGrid();
-        }
-        
-        // Calculate new point based on spiral type
-        let point = calculateSpiralPoint(angle);
-        
-        if (!isPaused) {
-            points.push(point);
-            
-            // Maintain point history
-            if (points.length > maxPoints) {
-                points.shift();
+        // Spiral definitions
+        this.spiralTypes = [
+            {
+                name: 'Golden Spiral',
+                func: (a) => this.spiralScale * Math.pow(this.phi, a * 0.1),
+                color: '#FFD700'
+            },
+            {
+                name: 'Fibonacci Spiral',
+                func: (a) => this.spiralScale * Math.pow(1.618, a * 0.08) * 0.8,
+                color: '#FF6B6B'
+            },
+            {
+                name: 'Archimedean Spiral',
+                func: (a) => this.spiralScale + a * 2,
+                color: '#4ECDC4'
+            },
+            {
+                name: 'Logarithmic Spiral',
+                func: (a) => this.spiralScale * Math.exp(a * 0.1),
+                color: '#45B7D1'
             }
-            
-            // Add particle effect
-            if (points.length > 5) {
-                addParticle(point);
-            }
-        }
+        ];
         
-        // Draw the spiral
-        drawSpiral();
+        this.colorModes = ['Rainbow Trail', 'Golden Gradient', 'Fire', 'Ocean'];
         
-        // Draw particle effects
-        drawParticles();
-        
-        // Draw current point
-        drawCurrentPoint(point);
-        
-        // Reset when spiral gets too big
-        if (getSpiralRadius(angle) > 120) {
-            resetSpiral();
-        }
-        
-        // Reset transform for UI
-        p.resetMatrix();
-        
-        if (showInfo) {
-            drawUI();
-        }
-    };
-    
-    function initializeSpiral() {
-        points = [];
-        for (let i = 0; i < 50; i++) {
-            let a = i * animationSpeed;
-            points.push(calculateSpiralPoint(a));
-        }
-        angle = 50 * animationSpeed;
+        this.init();
     }
     
-    function calculateSpiralPoint(a) {
-        let r, x, y;
+    init() {
+        const sketch = (p) => {
+            this.p5Instance = p;
+            
+            p.setup = () => {
+                const container = document.getElementById(this.containerId);
+                if (!container) {
+                    console.error(`Container ${this.containerId} not found`);
+                    return;
+                }
+                
+                let canvas = p.createCanvas(600, 400);
+                canvas.parent(this.containerId);
+                p.colorMode(p.HSB, 360, 100, 100);
+                
+                this.initializeSpiral();
+                this.addControls();
+            };
+            
+            p.draw = () => {
+                this.updateFPS();
+                
+                if (!this.isPaused) {
+                    this.time += 0.02;
+                    this.angle += this.animationSpeed;
+                }
+                
+                // Dynamic background
+                this.drawBackground();
+                
+                p.translate(p.width/2, p.height/2);
+                p.rotate(this.rotationOffset);
+                
+                if (this.showGrid) {
+                    this.drawGrid();
+                }
+                
+                // Calculate new point
+                let point = this.calculateSpiralPoint(this.angle);
+                
+                if (!this.isPaused) {
+                    this.points.push(point);
+                    
+                    if (this.points.length > this.maxPoints) {
+                        this.points.shift();
+                    }
+                    
+                    if (this.points.length > 5) {
+                        this.addParticle(point);
+                    }
+                }
+                
+                // Draw the spiral
+                this.drawSpiral();
+                this.drawParticles();
+                this.drawCurrentPoint(point);
+                
+                // Reset when spiral gets too big
+                if (this.getSpiralRadius(this.angle) > 150) {
+                    this.resetSpiral();
+                }
+                
+                p.resetMatrix();
+                
+                if (this.showInfo) {
+                    this.drawUI();
+                }
+            };
+            
+            p.keyPressed = () => {
+                switch(p.key.toLowerCase()) {
+                    case 's':
+                        this.spiralType = (this.spiralType + 1) % this.spiralTypes.length;
+                        this.resetSpiral();
+                        break;
+                    case 'c':
+                        this.colorMode = (this.colorMode + 1) % this.colorModes.length;
+                        break;
+                    case ' ':
+                        this.isPaused = !this.isPaused;
+                        break;
+                    case 'g':
+                        this.showGrid = !this.showGrid;
+                        break;
+                    case 'i':
+                        this.showInfo = !this.showInfo;
+                        break;
+                    case '+':
+                    case '=':
+                        this.animationSpeed = Math.min(this.animationSpeed * 1.2, 0.2);
+                        break;
+                    case '-':
+                    case '_':
+                        this.animationSpeed = Math.max(this.animationSpeed * 0.8, 0.01);
+                        break;
+                    case 'r':
+                        this.resetSpiral();
+                        break;
+                }
+                return false;
+            };
+            
+            p.mouseMoved = () => {
+                if (this.isInCanvas(p.mouseX, p.mouseY)) {
+                    let mouseInfluence = p.map(p.mouseX, 0, p.width, -0.02, 0.02);
+                    this.rotationOffset += mouseInfluence * 0.1;
+                }
+            };
+            
+            p.mousePressed = () => {
+                if (this.isInCanvas(p.mouseX, p.mouseY)) {
+                    this.spiralType = (this.spiralType + 1) % this.spiralTypes.length;
+                    this.resetSpiral();
+                    return false;
+                }
+            };
+        };
         
-        switch(spiralType) {
-            case 0: // Golden Spiral
-                r = spiralScale * Math.pow(phi, a * 0.1);
-                break;
-                
-            case 1: // Fibonacci Spiral (approximation)
-                r = spiralScale * Math.pow(1.618, a * 0.08) * 0.8;
-                break;
-                
-            case 2: // Archimedean Spiral
-                r = spiralScale + a * 2;
-                break;
-                
-            case 3: // Logarithmic Spiral
-                r = spiralScale * Math.exp(a * 0.1);
-                break;
+        new p5(sketch);
+    }
+    
+    isInCanvas(x, y) {
+        return x >= 0 && x <= this.p5Instance.width && y >= 0 && y <= this.p5Instance.height;
+    }
+    
+    initializeSpiral() {
+        this.points = [];
+        for (let i = 0; i < 50; i++) {
+            let a = i * this.animationSpeed;
+            this.points.push(this.calculateSpiralPoint(a));
         }
-        
-        x = r * Math.cos(a);
-        y = r * Math.sin(a);
+        this.angle = 50 * this.animationSpeed;
+    }
+    
+    calculateSpiralPoint(a) {
+        let r = this.spiralTypes[this.spiralType].func(a);
+        let x = r * Math.cos(a);
+        let y = r * Math.sin(a);
         
         return {x: x, y: y, angle: a, radius: r};
     }
     
-    function getSpiralRadius(a) {
-        switch(spiralType) {
-            case 0: return spiralScale * Math.pow(phi, a * 0.1);
-            case 1: return spiralScale * Math.pow(1.618, a * 0.08) * 0.8;
-            case 2: return spiralScale + a * 2;
-            case 3: return spiralScale * Math.exp(a * 0.1);
-        }
+    getSpiralRadius(a) {
+        return this.spiralTypes[this.spiralType].func(a);
     }
     
-    function drawBackground() {
-        // Animated gradient background
+    drawBackground() {
+        const p = this.p5Instance;
+        
         for (let i = 0; i <= p.height; i += 2) {
             let inter = p.map(i, 0, p.height, 0, 1);
             let c = p.lerpColor(
-                p.color(220, 30, 15 + Math.sin(time) * 5),
-                p.color(250, 50, 25 + Math.cos(time * 0.7) * 5),
+                p.color(220, 30, 15 + Math.sin(this.time) * 5),
+                p.color(250, 50, 25 + Math.cos(this.time * 0.7) * 5),
                 inter
             );
             p.stroke(c);
@@ -143,61 +213,64 @@ let spiralSketch = function(p) {
         }
     }
     
-    function drawGrid() {
+    drawGrid() {
+        const p = this.p5Instance;
+        
         p.stroke(0, 0, 40, 100);
         p.strokeWeight(0.5);
         
         // Concentric circles
-        for (let r = 20; r < 120; r += 20) {
+        for (let r = 20; r < 150; r += 20) {
             p.noFill();
             p.circle(0, 0, r * 2);
         }
         
         // Radial lines
         for (let a = 0; a < p.TWO_PI; a += p.PI / 8) {
-            p.line(0, 0, Math.cos(a) * 100, Math.sin(a) * 100);
+            p.line(0, 0, Math.cos(a) * 140, Math.sin(a) * 140);
         }
     }
     
-    function drawSpiral() {
-        if (points.length < 2) return;
+    drawSpiral() {
+        const p = this.p5Instance;
+        
+        if (this.points.length < 2) return;
         
         p.strokeWeight(1.5);
         p.noFill();
         
-        // Draw spiral with gradient colors
-        for (let i = 1; i < points.length; i++) {
-            let progress = i / points.length;
-            let point = points[i];
-            let prevPoint = points[i-1];
+        for (let i = 1; i < this.points.length; i++) {
+            let progress = i / this.points.length;
+            let point = this.points[i];
+            let prevPoint = this.points[i-1];
             
-            let col = getSpiralColor(progress, point);
+            let col = this.getSpiralColor(progress, point);
             p.stroke(col);
             
-            // Variable line width based on position
             let weight = p.map(progress, 0, 1, 0.5, 3);
             p.strokeWeight(weight);
             
             p.line(prevPoint.x, prevPoint.y, point.x, point.y);
         }
         
-        // Draw smoother curve overlay
+        // Smooth curve overlay
         p.stroke(0, 0, 100, 150);
         p.strokeWeight(0.8);
         p.noFill();
         p.beginShape();
-        for (let point of points) {
+        for (let point of this.points) {
             p.curveVertex(point.x, point.y);
         }
         p.endShape();
     }
     
-    function getSpiralColor(progress, point) {
+    getSpiralColor(progress, point) {
+        const p = this.p5Instance;
         let hue, sat, bright;
         
-        switch(colorMode) {
+        switch(this.colorMode) {
             case 0: // Rainbow trail
-                hue = (progress * 360 + time * 50) % 360;
+                hue = (progress * 360 + this.time * 50) % 360;
                 sat = 80 + Math.sin(progress * p.PI) * 20;
                 bright = 60 + progress * 40;
                 break;
@@ -215,7 +288,7 @@ let spiralSketch = function(p) {
                 break;
                 
             case 3: // Ocean
-                hue = p.map(progress, 0, 1, 180, 240) + Math.sin(time + progress * 10) * 10;
+                hue = p.map(progress, 0, 1, 180, 240) + Math.sin(this.time + progress * 10) * 10;
                 sat = 70 + Math.cos(progress * p.PI) * 30;
                 bright = 50 + progress * 40;
                 break;
@@ -224,9 +297,11 @@ let spiralSketch = function(p) {
         return p.color(hue, sat, bright, 200);
     }
     
-    function addParticle(point) {
+    addParticle(point) {
+        const p = this.p5Instance;
+        
         if (p.random() < 0.3) {
-            particleTrail.push({
+            this.particleTrail.push({
                 x: point.x + p.random(-3, 3),
                 y: point.y + p.random(-3, 3),
                 life: 30,
@@ -235,12 +310,13 @@ let spiralSketch = function(p) {
             });
         }
         
-        // Remove old particles
-        particleTrail = particleTrail.filter(particle => particle.life > 0);
+        this.particleTrail = this.particleTrail.filter(particle => particle.life > 0);
     }
     
-    function drawParticles() {
-        for (let particle of particleTrail) {
+    drawParticles() {
+        const p = this.p5Instance;
+        
+        for (let particle of this.particleTrail) {
             let alpha = p.map(particle.life, 0, particle.maxLife, 0, 100);
             let size = p.map(particle.life, 0, particle.maxLife, 0, particle.size);
             
@@ -252,9 +328,10 @@ let spiralSketch = function(p) {
         }
     }
     
-    function drawCurrentPoint(point) {
-        // Pulsing current point
-        let pulseSize = 4 + Math.sin(time * 8) * 2;
+    drawCurrentPoint(point) {
+        const p = this.p5Instance;
+        
+        let pulseSize = 4 + Math.sin(this.time * 8) * 2;
         
         // Outer glow
         p.fill(60, 100, 100, 100);
@@ -270,118 +347,112 @@ let spiralSketch = function(p) {
         p.circle(point.x, point.y, pulseSize * 0.4);
     }
     
-    function drawUI() {
+    drawUI() {
+        const p = this.p5Instance;
+        
         // Semi-transparent background
         p.fill(0, 0, 0, 150);
         p.noStroke();
-        p.rect(5, 5, 140, 85);
+        p.rect(10, 10, 180, 100);
         
         // Info text
         p.fill(0, 0, 100);
-        p.textSize(10);
-        let spiralNames = ['Golden', 'Fibonacci', 'Archimedean', 'Logarithmic'];
-        let colorNames = ['Rainbow', 'Golden', 'Fire', 'Ocean'];
-        
-        p.text(`Spiral: ${spiralNames[spiralType]}`, 10, 20);
-        p.text(`Colors: ${colorNames[colorMode]}`, 10, 35);
-        p.text(`Speed: ${(animationSpeed * 20).toFixed(1)}x`, 10, 50);
-        p.text(`Points: ${points.length}`, 10, 65);
-        p.text(`Status: ${isPaused ? 'Paused' : 'Running'}`, 10, 80);
+        p.textSize(11);
+        p.text(`Spiral: ${this.spiralTypes[this.spiralType].name}`, 20, 30);
+        p.text(`Colors: ${this.colorModes[this.colorMode]}`, 20, 45);
+        p.text(`Speed: ${(this.animationSpeed * 20).toFixed(1)}x`, 20, 60);
+        p.text(`Points: ${this.points.length}`, 20, 75);
+        p.text(`Status: ${this.isPaused ? 'Paused' : 'Running'}`, 20, 90);
+        p.text(`FPS: ${this.fps}`, 20, 105);
     }
     
-    function addControlsInfo() {
-        let container = document.getElementById('spiral-container');
-        if (container) {
-            let controlsDiv = document.createElement('div');
+    updateFPS() {
+        this.frameCount++;
+        if (this.p5Instance && this.p5Instance.millis() - this.lastFPSUpdate > 1000) {
+            this.fps = Math.round(this.frameCount * 1000 / (this.p5Instance.millis() - this.lastFPSUpdate));
+            this.frameCount = 0;
+            this.lastFPSUpdate = this.p5Instance.millis();
+        }
+    }
+    
+    addControls() {
+        const container = document.getElementById(this.containerId);
+        if (!container) return;
+        
+        let controlsDiv = container.querySelector('.module-controls');
+        if (!controlsDiv) {
+            controlsDiv = document.createElement('div');
+            controlsDiv.className = 'module-controls';
             controlsDiv.innerHTML = `
-                <div style="font-size: 11px; color: #666; margin-top: 10px; line-height: 1.4;">
-                    <strong>Controls:</strong><br>
-                    • S: change spiral type<br>
-                    • C: change colors<br>
-                    • Space: pause/resume<br>
-                    • G: toggle grid<br>
-                    • I: toggle info<br>
-                    • +/-: adjust speed<br>
-                    • R: reset spiral
+                <div style="margin-top: 15px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; font-size: 11px; color: #a0a9c0; font-family: 'JetBrains Mono', monospace;">
+                    <div style="margin-bottom: 10px; font-weight: bold; color: #00d4aa;">Controls:</div>
+                    <div>• S key: change spiral type</div>
+                    <div>• C key: change color mode</div>
+                    <div>• Spacebar: pause/resume animation</div>
+                    <div>• G key: toggle grid display</div>
+                    <div>• I key: toggle info panel</div>
+                    <div>• +/- keys: adjust animation speed</div>
+                    <div>• R key: reset spiral</div>
+                    <div>• Mouse: subtle rotation influence</div>
+                    <div style="margin-top: 10px; font-style: italic;">Explore the mathematical beauty of spirals!</div>
                 </div>
             `;
             container.appendChild(controlsDiv);
         }
     }
     
-    function resetSpiral() {
-        angle = 0;
-        points = [];
-        particleTrail = [];
-        rotationOffset += p.random(-0.2, 0.2);
+    resetSpiral() {
+        this.angle = 0;
+        this.points = [];
+        this.particleTrail = [];
+        this.rotationOffset += this.p5Instance ? this.p5Instance.random(-0.2, 0.2) : 0;
     }
     
-    // Keyboard controls
-    p.keyPressed = function() {
-        switch(p.key.toLowerCase()) {
-            case 's':
-                spiralType = (spiralType + 1) % 4;
-                resetSpiral();
-                break;
-                
-            case 'c':
-                colorMode = (colorMode + 1) % 4;
-                break;
-                
-            case ' ':
-                isPaused = !isPaused;
-                break;
-                
-            case 'g':
-                showGrid = !showGrid;
-                break;
-                
-            case 'i':
-                showInfo = !showInfo;
-                break;
-                
-            case '+':
-            case '=':
-                animationSpeed = Math.min(animationSpeed * 1.2, 0.2);
-                break;
-                
-            case '-':
-            case '_':
-                animationSpeed = Math.max(animationSpeed * 0.8, 0.01);
-                break;
-                
-            case 'r':
-                resetSpiral();
-                break;
+    destroy() {
+        if (this.p5Instance) {
+            this.p5Instance.remove();
+            this.p5Instance = null;
         }
-        return false;
-    };
-    
-    // Mouse interaction
-    p.mouseMoved = function() {
-        if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-            // Subtle mouse influence on spiral
-            let mouseInfluence = p.map(p.mouseX, 0, p.width, -0.02, 0.02);
-            rotationOffset += mouseInfluence * 0.1;
-        }
-    };
-    
-    p.mousePressed = function() {
-        if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-            // Click to change spiral type
-            spiralType = (spiralType + 1) % 4;
-            resetSpiral();
-            return false;
-        }
-    };
-    
-    // Resize handling
-    p.windowResized = function() {
-        let container = document.getElementById('spiral-container');
+        
+        const container = document.getElementById(this.containerId);
         if (container) {
-            let newWidth = Math.min(container.offsetWidth, 400);
-            let newHeight = Math.floor(newWidth * 0.75);
-            p.resizeCanvas(newWidth, newHeight);
+            container.innerHTML = '';
         }
-    };
+    }
+    
+    // Public API methods
+    toggleAnimation() {
+        this.isPaused = !this.isPaused;
+    }
+    
+    changeSpiralType() {
+        this.spiralType = (this.spiralType + 1) % this.spiralTypes.length;
+        this.resetSpiral();
+    }
+    
+    changeColorMode() {
+        this.colorMode = (this.colorMode + 1) % this.colorModes.length;
+    }
+    
+    getInfo() {
+        return {
+            title: 'Golden Spiral & Mathematical Sequences',
+            description: 'Interactive visualization of mathematical spirals and the golden ratio',
+            spiralType: this.spiralTypes[this.spiralType].name,
+            colorMode: this.colorModes[this.colorMode],
+            animationSpeed: this.animationSpeed,
+            isPaused: this.isPaused,
+            fps: this.fps
+        };
+    }
+}
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = SpiralVisualizer;
+}
+
+// Global factory function
+window.createSpiralVisualizer = function(containerId) {
+    return new SpiralVisualizer(containerId);
 };

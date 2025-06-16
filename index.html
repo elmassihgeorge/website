@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mathematical Explorations - Interactive Visualizations</title>
+    <title>Mandelbrot Set Explorer - MathViz</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -17,15 +16,16 @@
         }
 
         :root {
-            --primary-bg: #0a0a0f;
-            --secondary-bg: #1a1a2e;
-            --accent-color: #00ff88;
-            --accent-purple: #8b5cf6;
-            --accent-cyan: #06b6d4;
+            --primary-bg: #0a0e1a;
+            --secondary-bg: #1a1f2e;
+            --card-bg: rgba(26, 31, 46, 0.8);
+            --accent-primary: #00d4aa;
+            --accent-secondary: #667eea;
+            --accent-tertiary: #f093fb;
             --text-primary: #ffffff;
-            --text-secondary: #b4b4b8;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-secondary: #a0a9c0;
+            --text-muted: #6b7280;
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         body {
@@ -33,603 +33,653 @@
             background: var(--primary-bg);
             color: var(--text-primary);
             line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.3;
-        }
-
-        .bg-animation::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 20% 80%, var(--accent-purple) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, var(--accent-cyan) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, var(--accent-color) 0%, transparent 50%);
-            animation: backgroundShift 20s ease-in-out infinite;
-        }
-
-        @keyframes backgroundShift {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(1deg); }
         }
 
         /* Header */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            background: rgba(10, 10, 15, 0.8);
+        .header {
+            background: rgba(10, 14, 26, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
         }
 
         .logo {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(45deg, var(--accent-color), var(--accent-cyan));
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-decoration: none;
         }
 
-        nav ul {
+        .nav-links {
             display: flex;
-            list-style: none;
             gap: 2rem;
         }
 
-        nav a {
+        .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: color 0.3s ease;
         }
 
-        nav a:hover {
-            color: var(--accent-color);
+        .nav-links a:hover {
+            color: var(--accent-primary);
         }
 
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent-color);
-            transition: width 0.3s ease;
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        /* Hero Section */
-        .hero {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            z-index: 2;
-        }
-
-        .hero h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(45deg, var(--text-primary), var(--accent-color), var(--accent-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glow 3s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)); }
-            to { filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.6)); }
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease-out 0.5s both;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .cta-button {
-            display: inline-block;
-            padding: 1rem 2rem;
-            background: linear-gradient(45deg, var(--accent-color), var(--accent-cyan));
-            color: var(--primary-bg);
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
-        }
-
-        .cta-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .cta-button:hover::before {
-            left: 100%;
-        }
-
-        /* Projects Section */
-        .projects {
-            padding: 5rem 0;
-            position: relative;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
-            background: linear-gradient(45deg, var(--text-primary), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .modules-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .module-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
+        /* Main content */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 2rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
 
-        .module-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
-            transition: all 0.3s ease;
-        }
-
-        .module-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            border-color: var(--accent-color);
-        }
-
-        .module-card:hover::before {
-            height: 2px;
-            box-shadow: 0 0 20px var(--accent-color);
-        }
-
-        .module-card h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--accent-color);
-        }
-
-        .module-card p {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
-
-        .canvas-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            height: 200px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .canvas-placeholder {
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-        }
-
-        .view-code-btn {
-            background: transparent;
-            border: 2px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 0.75rem 1.5rem;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .view-code-btn:hover {
-            background: var(--accent-color);
-            color: var(--primary-bg);
-            transform: scale(1.05);
-        }
-
-        /* About Section */
-        .about {
-            padding: 5rem 0;
-            background: var(--secondary-bg);
-            margin: 3rem 0;
-            border-radius: 50px;
-        }
-
-        .about-content {
+        .module-header {
             text-align: center;
-            max-width: 800px;
+            margin-bottom: 3rem;
+        }
+
+        .module-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .module-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
             margin: 0 auto;
         }
 
-        .about h2 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            background: linear-gradient(45deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .module-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 3rem;
+            margin-bottom: 4rem;
         }
 
-        .about p {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
+        .visualization-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .visualization-container {
+            background: var(--primary-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            min-height: 500px;
+            margin-bottom: 2rem;
+        }
+
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group {
             margin-bottom: 1.5rem;
         }
 
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 3rem 0;
-            border-top: 1px solid var(--glass-border);
-            margin-top: 3rem;
+        .control-group:last-child {
+            margin-bottom: 0;
         }
 
-        footer p {
+        .control-label {
+            display: block;
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
         }
 
-        /* Responsive Design */
+        .control-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .control-button {
+            background: var(--accent-primary);
+            color: var(--primary-bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-button:hover {
+            background: #00b894;
+            transform: translateY(-1px);
+        }
+
+        .control-button.secondary {
+            background: transparent;
+            color: var(--accent-secondary);
+            border: 1px solid var(--accent-secondary);
+        }
+
+        .control-button.secondary:hover {
+            background: var(--accent-secondary);
+            color: var(--text-primary);
+        }
+
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .info-card h3 {
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .concept-list {
+            list-style: none;
+        }
+
+        .concept-list li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .concept-list li:last-child {
+            border-bottom: none;
+        }
+
+        .concept-list li::before {
+            content: '→';
+            color: var(--accent-primary);
+            margin-right: 0.5rem;
+        }
+
+        /* Documentation section */
+        .documentation {
+            background: var(--secondary-bg);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .doc-section {
+            margin-bottom: 2rem;
+        }
+
+        .doc-section h3 {
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .code-block {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* Responsive design */
         @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-
-            nav ul {
-                gap: 1rem;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .modules-grid {
+            .module-content {
                 grid-template-columns: 1fr;
-                gap: 1.5rem;
+                gap: 2rem;
             }
 
-            .module-card {
-                padding: 1.5rem;
+            .container {
+                padding: 1rem;
             }
-        }
 
-        /* Scroll animations */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s ease;
-        }
+            .module-title {
+                font-size: 2rem;
+            }
 
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
-    
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">MathViz</div>
-                <nav>
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#projects">Projects</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </nav>
-            </div>
+    <header class="header">
+        <div class="header-content">
+            <a href="../index.html" class="logo">MathViz</a>
+            <nav class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="../index.html#modules">All Modules</a>
+                <a href="../index.html#about">About</a>
+                <a href="https://github.com/yourusername/mathviz" target="_blank">GitHub</a>
+            </nav>
         </div>
     </header>
 
-    <section class="hero" id="home">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Mathematics Through Code</h1>
-                <p>Interactive visualizations exploring the infinite beauty of mathematical concepts through cutting-edge programming</p>
-                <a href="#projects" class="cta-button">Explore Visualizations</a>
-            </div>
+    <main class="container">
+        <div class="module-header">
+            <h1 class="module-title">Mandelbrot Set Explorer</h1>
+            <p class="module-subtitle">
+                Interactive exploration of one of mathematics' most famous fractals through complex number iteration and escape-time algorithms
+            </p>
         </div>
-    </section>
 
-    <section class="projects" id="projects">
-        <div class="container">
-            <h2 class="section-title">Interactive Projects</h2>
-            <div class="modules-grid">
-                <div class="module-card fade-in">
-                    <h3>Mandelbrot Set Explorer</h3>
-                    <p>Dive deep into the infinite complexity of the famous fractal with real-time zoom capabilities, dynamic coloring algorithms, and interactive exploration tools.</p>
-                    <div class="canvas-container">
-                        <div id="mandelbrot-container">
-                            <div class="canvas-placeholder">// Fractal visualization loading...</div>
-                        </div>
+        <div class="module-content">
+            <div class="visualization-panel">
+                <div class="visualization-container" id="mandelbrot-main">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+                        Loading Mandelbrot Set Visualization...
                     </div>
-                    <button class="view-code-btn" onclick="showCodeModal('mandelbrot')">View Source Code</button>
                 </div>
 
-                <div class="module-card fade-in">
-                    <h3>Golden Spiral</h3>
-                    <p>Experience the mathematical elegance of the golden ratio through animated spiral generation, Fibonacci sequence visualization, and geometric harmony.</p>
-                    <div class="canvas-container">
-                        <div id="spiral-container">
-                            <div class="canvas-placeholder">// Golden ratio animation...</div>
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <label class="control-label">Maximum Iterations</label>
+                        <input type="range" class="control-input" id="iterations-slider" min="50" max="500" step="10" value="100">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            <span>50</span>
+                            <span id="iterations-value">100</span>
+                            <span>500</span>
                         </div>
                     </div>
-                    <button class="view-code-btn" onclick="showCodeModal('spiral')">View Source Code</button>
-                </div>
 
-                <div class="module-card fade-in">
-                    <h3>3D Function Plotter</h3>
-                    <p>Visualize complex mathematical functions in three dimensions with WebGL acceleration, interactive camera controls, and customizable parameter inputs.</p>
-                    <div class="canvas-container">
-                        <div id="threejs-container">
-                            <div class="canvas-placeholder">// 3D mathematics rendering...</div>
-                        </div>
+                    <div class="control-group">
+                        <label class="control-label">Color Palette</label>
+                        <select class="control-input" id="palette-select">
+                            <option value="0">Classic Blue-Purple</option>
+                            <option value="1">Fire</option>
+                            <option value="2">Ocean</option>
+                            <option value="3">Rainbow</option>
+                        </select>
                     </div>
-                    <button class="view-code-btn" onclick="showCodeModal('3d-plot')">View Source Code</button>
-                </div>
 
-                <div class="module-card fade-in">
-                    <h3>Wave Interference</h3>
-                    <p>Explore wave physics through interactive simulations showing constructive and destructive interference patterns in real-time.</p>
-                    <div class="canvas-container">
-                        <div id="wave-container">
-                            <div class="canvas-placeholder">// Wave physics simulation...</div>
-                        </div>
+                    <div class="control-group">
+                        <button class="control-button" onclick="resetView()">Reset View</button>
+                        <button class="control-button secondary" onclick="toggleQuality()">Toggle Quality</button>
+                        <button class="control-button secondary" onclick="saveImage()">Save Image</button>
                     </div>
-                    <button class="view-code-btn" onclick="showCodeModal('waves')">View Source Code</button>
-                </div>
-
-                <div class="module-card fade-in">
-                    <h3>Chaos Theory</h3>
-                    <p>Visualize the beauty of chaos through the Lorenz attractor, butterfly effect demonstrations, and strange attractor explorations.</p>
-                    <div class="canvas-container">
-                        <div id="chaos-container">
-                            <div class="canvas-placeholder">// Chaos theory visualization...</div>
-                        </div>
-                    </div>
-                    <button class="view-code-btn" onclick="showCodeModal('chaos')">View Source Code</button>
-                </div>
-
-                <div class="module-card fade-in">
-                    <h3>Prime Number Patterns</h3>
-                    <p>Discover hidden patterns in prime number distribution through various visualization techniques and mathematical analyses.</p>
-                    <div class="canvas-container">
-                        <div id="primes-container">
-                            <div class="canvas-placeholder">// Prime number analysis...</div>
-                        </div>
-                    </div>
-                    <button class="view-code-btn" onclick="showCodeModal('primes')">View Source Code</button>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="about" id="about">
-        <div class="container">
-            <div class="about-content fade-in">
-                <h2>About This Project</h2>
-                <p>This collection represents the intersection of mathematical beauty and computational power. Each visualization is carefully crafted to reveal the hidden patterns and structures that govern our mathematical universe.</p>
-                <p>Built with modern web technologies including p5.js, Three.js, and WebGL, these interactive experiences make complex mathematical concepts accessible and visually stunning.</p>
-                <p>Mathematics is not just numbers and equations—it's the language of patterns, the foundation of beauty, and the key to understanding the cosmos.</p>
+            <div class="info-panel">
+                <div class="info-card">
+                    <h3>Real-time Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-zoom">1.0x</div>
+                            <div class="stat-label">Zoom Level</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-fps">60</div>
+                            <div class="stat-label">FPS</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="current-iterations">100</div>
+                            <div class="stat-label">Max Iterations</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="render-time">16ms</div>
+                            <div class="stat-label">Render Time</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>Mathematical Concepts</h3>
+                    <p>The Mandelbrot set demonstrates several fundamental concepts in mathematics and computer science:</p>
+                    <ul class="concept-list">
+                        <li>Complex Number Theory</li>
+                        <li>Iterative Functions</li>
+                        <li>Escape-Time Algorithms</li>
+                        <li>Computational Complexity</li>
+                        <li>Fractal Geometry</li>
+                        <li>Infinite Detail</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h3>Controls & Navigation</h3>
+                    <p>Explore the fractal using these interactive controls:</p>
+                    <ul class="concept-list">
+                        <li>Click & drag to pan around</li>
+                        <li>Mouse wheel to zoom in/out</li>
+                        <li>C key to cycle color palettes</li>
+                        <li>Q key to toggle render quality</li>
+                        <li>R key to reset to initial view</li>
+                        <li>Use sliders for precise control</li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </section>
 
-    <footer id="contact">
-        <div class="container">
-            <p>&copy; 2025 MathViz. Exploring the infinite beauty of mathematics through interactive programming.</p>
+        <div class="documentation">
+            <div class="doc-section">
+                <h3>Mathematical Foundation</h3>
+                <p>
+                    The Mandelbrot set is defined as the set of complex numbers c for which the iterative formula 
+                    z<sub>n+1</sub> = z<sub>n</sub><sup>2</sup> + c does not diverge when starting from z<sub>0</sub> = 0.
+                </p>
+                <div class="code-block">
+                    <code>
+function calculateMandelbrot(x, y) {
+    let a = map(x, 0, width, -2.5/zoom + offsetX, 1.5/zoom + offsetX);
+    let b = map(y, 0, height, -1.5/zoom + offsetY, 1.5/zoom + offsetY);
+    
+    let ca = a, cb = b, n = 0, za = a, zb = b;
+    
+    while (n < maxIterations) {
+        let aa = za * za - zb * zb;
+        let bb = 2 * za * zb;
+        za = aa + ca;
+        zb = bb + cb;
+        
+        if (za * za + zb * zb > 4) {
+            // Smooth coloring using continuous iteration count
+            return n + 1 - log(log(sqrt(za*za + zb*zb)))/log(2);
+        }
+        n++;
+    }
+    
+    return maxIterations;
+}
+                    </code>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h3>Escape-Time Algorithm</h3>
+                <p>
+                    The visualization uses an escape-time algorithm to determine if each point belongs to the set. 
+                    Points that don't escape after a maximum number of iterations are considered part of the set and colored black.
+                </p>
+                <p>
+                    The algorithm's efficiency is crucial for real-time interaction. Several optimizations are employed:
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 2rem;">
+                    <li>Adaptive quality rendering during user interaction</li>
+                    <li>Smooth iteration counting for better color gradients</li>
+                    <li>Optimized pixel manipulation for performance</li>
+                    <li>Dynamic iteration count based on zoom level</li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h3>Color Mapping</h3>
+                <p>
+                    Different color palettes highlight various aspects of the fractal's structure. The coloring is based 
+                    on the number of iterations required for a point to escape the bounded region.
+                </p>
+                <div class="code-block">
+                    <code>
+function getColor(iterations) {
+    if (iterations >= maxIterations) return color(0, 0, 0);
+    
+    let palette = palettes[colorPalette];
+    let hue = map(iterations % 80, 0, 80, palette.hueRange[0], palette.hueRange[1]);
+    let sat = palette.saturation;
+    let bright = map(iterations, 0, maxIterations, 20, 100);
+    
+    return color(hue, sat, bright);
+}
+                    </code>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h3>Performance Optimization</h3>
+                <p>
+                    Real-time fractal rendering requires careful performance optimization. This implementation includes:
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 2rem;">
+                    <li><strong>Adaptive Quality:</strong> Lower resolution during interaction, full quality when stationary</li>
+                    <li><strong>Efficient Pixel Access:</strong> Direct pixel array manipulation for maximum performance</li>
+                    <li><strong>Smart Iteration Limits:</strong> Dynamic adjustment based on zoom level</li>
+                    <li><strong>Optimized Math:</strong> Minimal function calls in tight loops</li>
+                    <li><strong>Frame Rate Monitoring:</strong> Real-time performance feedback</li>
+                </ul>
+            </div>
+
+            <div class="doc-section">
+                <h3>Scientific Computing Applications</h3>
+                <p>
+                    This visualization demonstrates several concepts relevant to scientific computing:
+                </p>
+                <ul style="color: var(--text-secondary); margin-left: 2rem;">
+                    <li><strong>Numerical Stability:</strong> Understanding when iterative processes converge or diverge</li>
+                    <li><strong>Algorithm Efficiency:</strong> Optimizing computational intensive operations</li>
+                    <li><strong>Visualization Techniques:</strong> Effective representation of mathematical data</li>
+                    <li><strong>Interactive Computing:</strong> Real-time parameter adjustment and feedback</li>
+                    <li><strong>Complex Analysis:</strong> Working with complex numbers and functions</li>
+                </ul>
+            </div>
         </div>
-    </footer>
+    </main>
 
-    <!-- JavaScript -->
+    <!-- Include the Mandelbrot module -->
+    <script src="../js/mandelbrot.js"></script>
+    
     <script>
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+        // Module instance
+        let mandelbrotModule = null;
+        
+        // Initialize the module
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                try {
+                    mandelbrotModule = window.createMandelbrotVisualizer('mandelbrot-main');
+                    setupControls();
+                    startStatsUpdate();
+                    console.log('Mandelbrot module initialized successfully!');
+                } catch (error) {
+                    console.error('Error initializing module:', error);
+                    document.getElementById('mandelbrot-main').innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--error);">
+                            Error loading visualization
+                        </div>
+                    `;
                 }
-            });
+            }, 500);
         });
 
-        // Intersection Observer for fade-in animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
+        // Setup control event listeners
+        function setupControls() {
+            const zoomSlider = document.getElementById('zoom-slider');
+            const iterationsSlider = document.getElementById('iterations-slider');
+            const paletteSelect = document.getElementById('palette-select');
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+            zoomSlider.addEventListener('input', (e) => {
+                if (mandelbrotModule) {
+                    mandelbrotModule.zoom = parseFloat(e.target.value);
+                    mandelbrotModule.drawMandelbrot();
+                }
+                document.getElementById('zoom-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            });
+
+            iterationsSlider.addEventListener('input', (e) => {
+                if (mandelbrotModule) {
+                    mandelbrotModule.maxIterations = parseInt(e.target.value);
+                    mandelbrotModule.drawMandelbrot();
+                }
+                document.getElementById('iterations-value').textContent = e.target.value;
+            });
+
+            paletteSelect.addEventListener('change', (e) => {
+                if (mandelbrotModule) {
+                    mandelbrotModule.colorPalette = parseInt(e.target.value);
+                    mandelbrotModule.drawMandelbrot();
                 }
             });
-        }, observerOptions);
+        }
 
-        document.querySelectorAll('.fade-in').forEach(el => {
-            observer.observe(el);
-        });
+        // Control functions
+        function resetView() {
+            if (mandelbrotModule) {
+                mandelbrotModule.reset();
+                // Reset sliders
+                document.getElementById('zoom-slider').value = 1;
+                document.getElementById('zoom-value').textContent = '1.0x';
+                document.getElementById('iterations-slider').value = 100;
+                document.getElementById('iterations-value').textContent = '100';
+            }
+        }
 
-        // Header background on scroll
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(10, 10, 15, 0.95)';
-            } else {
-                header.style.background = 'rgba(10, 10, 15, 0.8)';
+        function toggleQuality() {
+            if (mandelbrotModule) {
+                mandelbrotModule.toggleQuality();
+            }
+        }
+
+        function saveImage() {
+            if (mandelbrotModule && mandelbrotModule.p5Instance) {
+                mandelbrotModule.p5Instance.save('mandelbrot-set.png');
+            }
+        }
+
+        // Update statistics display
+        function startStatsUpdate() {
+            setInterval(() => {
+                if (mandelbrotModule) {
+                    const info = mandelbrotModule.getInfo();
+                    document.getElementById('current-zoom').textContent = info.zoom.toFixed(2) + 'x';
+                    document.getElementById('current-fps').textContent = info.fps;
+                    document.getElementById('current-iterations').textContent = info.iterations;
+                    
+                    // Calculate approximate render time
+                    const renderTime = Math.round(1000 / Math.max(info.fps, 1));
+                    document.getElementById('render-time').textContent = renderTime + 'ms';
+                }
+            }, 1000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (mandelbrotModule) {
+                switch(event.key.toLowerCase()) {
+                    case 'r':
+                        if (!event.ctrlKey && !event.metaKey) {
+                            event.preventDefault();
+                            resetView();
+                        }
+                        break;
+                    case 'c':
+                        event.preventDefault();
+                        mandelbrotModule.changeColorPalette();
+                        // Update select
+                        const select = document.getElementById('palette-select');
+                        select.value = mandelbrotModule.colorPalette;
+                        break;
+                    case 'q':
+                        event.preventDefault();
+                        toggleQuality();
+                        break;
+                    case 's':
+                        if (event.ctrlKey || event.metaKey) {
+                            event.preventDefault();
+                            saveImage();
+                        }
+                        break;
+                }
             }
         });
-
-        // Code modal function (placeholder)
-        function showCodeModal(project) {
-            // Create a simple modal for now
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-            `;
-            
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: var(--secondary-bg);
-                padding: 2rem;
-                border-radius: 20px;
-                border: 1px solid var(--accent-color);
-                max-width: 500px;
-                text-align: center;
-            `;
-            
-            content.innerHTML = `
-                <h3 style="color: var(--accent-color); margin-bottom: 1rem;">Source Code: ${project}</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Interactive code viewing and GitHub integration coming soon!</p>
-                <button onclick="this.closest('div').remove()" style="background: var(--accent-color); color: var(--primary-bg); border: none; padding: 0.75rem 1.5rem; border-radius: 25px; cursor: pointer; font-weight: 600;">Close</button>
-            `;
-            
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-            
-            // Close on click outside
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.remove();
-                }
-            });
-        }
-
-        // Initialize canvas placeholders with animated text
-        function animateCanvasPlaceholders() {
-            const placeholders = document.querySelectorAll('.canvas-placeholder');
-            placeholders.forEach((placeholder, index) => {
-                let dots = '';
-                setInterval(() => {
-                    dots = dots.length >= 3 ? '' : dots + '.';
-                    const originalText = placeholder.textContent.split('...')[0];
-                    placeholder.textContent = originalText + dots;
-                }, 500 + index * 100);
-            });
-        }
-
-        // Initialize everything when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            animateCanvasPlaceholders();
-        });
     </script>
-
-    <!-- Your existing JavaScript files -->
-    <script src="js/mandelbrot.js"></script>
-    <script src="js/spiral.js"></script>
-    <script src="js/threejs-plot.js"></script>
-    <script src="js/main.js"></script>
 </body>
-</html>
+</html>Zoom Level</label>
+                        <input type="range" class="control-input" id="zoom-slider" min="0.1" max="100" step="0.1" value="1">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            <span>0.1x</span>
+                            <span id="zoom-value">1.0x</span>
+                            <span>100x</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">
