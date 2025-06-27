@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>George ElMassih - Mathematics & Computer Science</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/modules.css">
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <!-- Background Canvas -->
+    <canvas class="bg-canvas"></canvas>
+    
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-content">
+            <a href="#" class="site-logo">elmassihgeorge.com</a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#featured">Featured</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#projects">Projects</a></li>
+                    <li><a href="#resume">Resume</a></li>
+                    <li><a href="#about">About</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="main-content">
+        <!-- Modules will be dynamically generated here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 George ElMassih • elmassihgeorge.com • BS CS & Math, Northeastern • Prospective MS Scientific Computing, NYU</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/mandelbrot-webgl.js"></script>
+    <script src="js/modules.js"></script>
+    
+    <script>
+        // Module Configuration
+        const siteConfig = [
+            // Featured Post Module
+            {
+                id: 'featured',
+                type: 'featured',
+                background: 'primary',
+                enabled: true,
+                data: {
+                    title: 'The Mandelbrot Set: A Journey into Mathematical Infinity',
+                    excerpts: [
+                        'The Mandelbrot Set represents one of the most captivating intersections between mathematics and computer science. This fractal structure, defined by the simple equation z = z² + c, reveals infinite complexity at every scale, demonstrating how simple mathematical rules can generate boundless beauty.',
+                        'Through GPU-accelerated WebGL rendering, we can explore this mathematical universe in real-time, zooming into regions that would be impossible to visualize with traditional methods. Each point in the complex plane tells a story of convergence or divergence, painted in colors that reveal the underlying mathematical structure.'
+                    ],
+                    date: 'December 2024',
+                    readTime: '5 min read',
+                    tags: 'Mathematics • Fractals • WebGL',
+                    canvasId: 'mandelbrot-container',
+                    buttons: [
+                        { text: 'Reset View', type: 'primary', action: 'resetMandelbrot()' },
+                        { text: 'Change Colors', type: 'secondary', action: 'toggleColorScheme()' },
+                        { text: 'Auto Explore', type: 'secondary', action: 'exploreInterestingLocation()' }
+                    ]
+                }
+            },
+
+            // Blog Module
+            {
+                id: 'blog',
+                type: 'blog',
+                title: 'Recent Posts',
+                background: 'auto',
+                enabled: true,
+                data: {
+                    posts: [
+                        {
+                            title: 'The Mandelbrot Set: A Journey into Mathematical Infinity',
+                            date: 'December 2024',
+                            category: 'Fractals',
+                            excerpt: 'Exploring the infinite complexity of the Mandelbrot Set through GPU-accelerated visualization and mathematical analysis.',
+                            link: '#featured',
+                            linkText: 'Read More →'
+                        },
+                        {
+                            title: 'Golden Spirals in Nature and Mathematics',
+                            date: 'November 2024',
+                            category: 'Geometry',
+                            excerpt: 'From nautilus shells to galaxy formations, the golden ratio appears throughout nature in surprising ways.',
+                            link: '#',
+                            linkText: 'Coming Soon →'
+                        },
+                        {
+                            title: 'WebGL Shaders for Mathematical Visualization',
+                            date: 'October 2024',
+                            category: 'Programming',
+                            excerpt: 'A technical deep-dive into using GPU shaders for real-time mathematical computation and visualization.',
+                            link: '#',
+                            linkText: 'Coming Soon →'
+                        }
+                    ]
+                }
+            },
+
+            // Projects Module
+            {
+                id: 'projects',
+                type: 'projects',
+                title: 'Interactive Projects',
+                background: 'auto',
+                enabled: true,
+                data: {
+                    projects: [
+                        {
+                            title: 'Golden Spiral & Sequences',
+                            icon: 'φ',
+                            iconStyle: 'background: linear-gradient(135deg, #00d4aa, #06b6d4);',
+                            description: 'Animated visualization of the golden ratio, Fibonacci sequences, and mathematical spirals. Demonstrates the intersection of number theory and geometric beauty.',
+                            containerId: 'spiral-container',
+                            performance: '60 FPS',
+                            buttons: [
+                                { text: 'View Details', type: 'primary', action: 'alert("Golden Spiral details")' },
+                                { text: 'Reset Animation', type: 'secondary', action: 'alert("Reset animation")' }
+                            ]
+                        },
+                        {
+                            title: '3D Function Visualizer',
+                            icon: '∇',
+                            iconStyle: 'background: linear-gradient(135deg, #f093fb, #f5576c);',
+                            description: 'Real-time 3D plotting with Three.js. Interactive camera controls, multiple mathematical functions, and smooth surface rendering.',
+                            containerId: 'threejs-container',
+                            performance: '60 FPS',
+                            buttons: [
+                                { text: 'View Details', type: 'primary', action: 'alert("3D Visualizer details")' },
+                                { text: 'Switch Function', type: 'secondary', action: 'alert("Switch function")' }
+                            ]
+                        }
+                    ]
+                }
+            },
+
+            // Resume Module
+            {
+                id: 'resume',
+                type: 'resume',
+                title: 'Experience & Education',
+                background: 'auto',
+                enabled: true,
+                data: {
+                    sections: [
+                        {
+                            title: 'Education',
+                            type: 'education',
+                            items: [
+                                {
+                                    title: 'MS Scientific Computing (Prospective)',
+                                    date: 'TBD',
+                                    institution: 'New York University',
+                                    description: 'Intended focus on high-performance computing, numerical methods, and computational mathematics'
+                                },
+                                {
+                                    title: 'BS Computer Science & Mathematics',
+                                    date: '2024',
+                                    institution: 'Northeastern University',
+                                    description: 'Dual degree combining theoretical mathematics with practical computer science applications'
+                                }
+                            ]
+                        },
+                        {
+                            title: 'Technical Skills',
+                            type: 'skills',
+                            categories: [
+                                {
+                                    title: 'Mathematics',
+                                    skills: ['Numerical Analysis', 'Linear Algebra', 'Complex Analysis', 'Differential Equations']
+                                },
+                                {
+                                    title: 'Programming',
+                                    skills: ['JavaScript/WebGL', 'Python/NumPy', 'C++/CUDA', 'MATLAB']
+                                },
+                                {
+                                    title: 'Visualization',
+                                    skills: ['WebGL Shaders', 'Three.js', 'p5.js', 'D3.js']
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+
+            // About Module
+            {
+                id: 'about',
+                type: 'about',
+                title: 'About George',
+                background: 'auto',
+                enabled: true,
+                data: {
+                    paragraphs: [
+                        "I'm a mathematician and computer scientist passionate about the intersection of theoretical mathematics and computational visualization. My work focuses on making complex mathematical concepts accessible through interactive, real-time demonstrations.",
+                        "As a prospective graduate student in Scientific Computing at NYU, I'm particularly interested in high-performance computing, numerical methods, and the application of GPU acceleration to mathematical visualization. Each project on this site represents an exploration of how modern web technologies can bring mathematical beauty to life.",
+                        "When I'm not coding or exploring mathematical concepts, I enjoy discussing the philosophical implications of computational mathematics and the role of visualization in mathematical understanding."
+                    ],
+                    image: {
+                        src: 'IMG_5068.JPEG',
+                        alt: 'George ElMassih'
+                    }
+                }
+            }
+        ];
+
+        // Initialize the module system
+        document.addEventListener('DOMContentLoaded', function() {
+            const moduleManager = new ModuleManager();
+            moduleManager.setModules(siteConfig);
+            moduleManager.init('main-content');
+        });
+    </script>
+</body>
+</html>

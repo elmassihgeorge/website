@@ -1,0 +1,240 @@
+/* Base CSS - Core styles for elmassihgeorge.com */
+
+/* CSS Custom Properties */
+:root {
+    --primary-bg: #3e2723;
+    --secondary-bg: #4a2c20;
+    --tertiary-bg: #5d4037;
+    --card-bg: rgba(121, 85, 72, 0.3);
+    --header-bg: #2e1a16;
+    --accent-primary: #d7ccc8;
+    --accent-secondary: #a1887f;
+    --accent-tertiary: #8d6e63;
+    --text-primary: #efebe9;
+    --text-secondary: #d7ccc8;
+    --text-muted: #a1887f;
+    --border-color: rgba(215, 204, 200, 0.2);
+    --warm-gold: #ffb74d;
+    --section-alt: #4a3429;
+    
+    /* Spacing */
+    --section-padding: 2rem;
+    --container-max-width: 1400px;
+    --content-max-width: 1200px;
+    --narrow-max-width: 1000px;
+}
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
+h2 { font-size: clamp(2rem, 4vw, 3rem); }
+h3 { font-size: clamp(1.5rem, 3vw, 2rem); }
+h4 { font-size: clamp(1.2rem, 2.5vw, 1.5rem); }
+
+p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+/* Layout Components */
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.content-container {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.narrow-container {
+    max-width: var(--narrow-max-width);
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Header */
+.site-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: var(--header-bg);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+}
+
+.site-logo {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+}
+
+/* Navigation */
+.main-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2.5rem;
+}
+
+.main-nav a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.main-nav a:hover {
+    color: var(--warm-gold);
+}
+
+.main-nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--warm-gold), var(--accent-primary));
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-nav a:hover::after {
+    width: 100%;
+}
+
+/* Footer */
+.site-footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--header-bg);
+}
+
+.site-footer p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Background Canvas */
+.bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.4;
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 1rem;
+    }
+
+    .main-nav ul {
+        gap: 1rem;
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+    }
+    
+    .container,
+    .content-container,
+    .narrow-container {
+        padding: 0 1rem;
+    }
+}
+
+/* Loading States */
+.loading {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.loaded {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to { 
+        transform: rotate(360deg); 
+    }
+}
